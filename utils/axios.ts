@@ -2,8 +2,10 @@ import axios from 'axios';
 import { toast } from 'sonner';
 
 // Create a global Axios instance
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || '/api',
+  baseURL: API_URL,
   withCredentials: true, // Crucial for sending HTTP-only cookies
   headers: {
     'Content-Type': 'application/json',

@@ -4,74 +4,73 @@ AutoParse is an enterprise-level, production-ready AI Financial Document Parser 
 
 ## 🚀 Technology Stack
 - **Frontend:** Next.js 15 (App Router), React 19, TypeScript, TailwindCSS v4, Shadcn UI, Zustand, TanStack Query, Recharts.
-- **Backend:** Next.js API Routes (Serverless Functions), TypeScript.
-- **Database:** MongoDB Atlas (Free Tier) via Mongoose.
+- **Backend:** Python 3.13+, FastAPI, SQLAlchemy, Alembic, Uvicorn.
+- **Database:** PostgreSQL (Supabase / Neon) via pg8000.
 - **Storage:** Cloudinary (Free Tier).
 - **AI & OCR:** Gemini API (Primary Parser), Groq API (Fast Fallback), Tesseract.js / pdf.js.
-- **Deployment:** Vercel (Frontend & Serverless Backend).
 
 ## 📂 Folder Structure
 
-The project uses a monolithic Next.js architecture with strict logical separation:
+The project uses a decoupled frontend/backend architecture:
 
-- `app/` - Next.js App Router (Frontend pages & API routes)
+- `app/` - Next.js App Router (Frontend pages)
 - `components/` - Global reusable UI components (Shadcn)
-- `modules/` - Feature-specific frontend modules (auth, dashboard, review)
-- `src/` - Backend Logic
-  - `ai/` - Gemini/Groq integration, parsing pipelines, API key rotation
-  - `config/` - Environment variables (Zod validated)
-  - `database/` - MongoDB connection utility
-  - `middlewares/` - Auth & Role verification
-  - `models/` - Mongoose Schemas (User, Document, AuditLog, etc.)
-  - `ocr/` - Tesseract & pdf.js integration
-  - `storage/` - Cloudinary integration
-  - `utils/` - JWT generation/verification
-  - `validators/` - Business logic document validation
+- `backend/` - Python FastAPI Backend
+  - `core/` - JWT security, config, database engines
+  - `api/` - FastAPI Routers (auth, documents, etc.)
+  - `models/` - SQLAlchemy Database Models
+  - `schemas/` - Pydantic Validation Schemas
+  - `services/` - Business Logic (AI Parsing, Uploads)
+  - `alembic/` - Database Migrations
 
 ## ⚙️ Environment Variables
 
 Create a `.env` file in the root directory:
 
 ```env
-MONGODB_URI=mongodb+srv://<user>:<password>@cluster0.mongodb.net/autoparse
+# Database
+DATABASE_URL=postgresql+pg8000://user:pass@host:5432/postgres
+
+# JWT
 JWT_SECRET=super_secret_jwt_key_at_least_32_chars
 JWT_REFRESH_SECRET=super_secret_jwt_refresh_key_at_least_32_chars
 JWT_EXPIRES_IN=15m
 JWT_REFRESH_EXPIRES_IN=7d
+
+# AI Providers
 GEMINI_API_KEYS=key1,key2,key3
 GROQ_API_KEYS=key1,key2
+
+# Storage
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
-NEXT_PUBLIC_API_URL=http://localhost:3000/api
+
+# Frontend Configuration
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
 NODE_ENV=development
 ```
 
-## 🛠️ Deployment Guide (Vercel)
+## 🏃‍♂️ Running Locally
 
-1. Push your repository to GitHub.
-2. Log into [Vercel](https://vercel.com) and create a New Project.
-3. Import your GitHub repository.
-4. Under **Environment Variables**, paste all the variables from your `.env`.
-5. Click **Deploy**.
-6. (Optional) In Vercel Settings -> Functions, ensure the region is close to your MongoDB Atlas region. Max duration on free tier is 10s.
+Since the architecture is decoupled, you must run both servers simultaneously in two separate terminals.
 
-## 🔐 API Documentation (Overview)
+### 1. Start the FastAPI Backend
+Open a new terminal in the project root (`ocr` directory, DO NOT `cd backend`):
+```powershell
+.\.venv\Scripts\Activate.ps1
+uvicorn backend.main:app --reload --port 8000
+```
+*The backend API documentation will be available at [http://localhost:8000/docs](http://localhost:8000/docs).*
 
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|---|
-| POST | `/api/auth/register` | Register a new user | No |
-| POST | `/api/auth/login` | Authenticate & receive cookies | No |
-| POST | `/api/auth/refresh` | Rotate access token | Yes |
-| POST | `/api/auth/logout` | Revoke tokens | Yes |
-| POST | `/api/documents/upload` | Upload & parse document (Sync) | Yes |
-| GET | `/api/documents` | List documents (filters: status, type) | Yes |
-| PUT | `/api/documents/:id/review`| Approve/Reject a parsed document | Yes (Analyst/Admin) |
-| GET | `/api/dashboard` | Aggregated statistics & chart data | Yes |
-| GET | `/api/reports/export` | Download CSV of documents | Yes |
-| GET | `/api/audit` | Fetch system audit logs | Yes (Admin) |
+### 2. Start the Next.js Frontend
+Open another terminal in the project root:
+```powershell
+npm run dev
+```
+*The frontend will be available at [http://localhost:3000](http://localhost:3000).*
 
 ## 🧠 AI Key Rotation & Fallback
 
-The system implements robust API management in `src/ai/keyRotation.ts`. 
-If Gemini exhausts its quota or hits a rate limit, the system automatically rotates to the next available API key. If all Gemini keys fail, the pipeline in `src/ai/parser.ts` automatically falls back to Groq for extraction.
+The system implements robust API management. 
+If Gemini exhausts its quota or hits a rate limit, the system automatically rotates to the next available API key. If all Gemini keys fail, the pipeline automatically falls back to Groq for extraction.

@@ -1,14 +1,14 @@
 import { createWorker } from 'tesseract.js';
-import * as pdfjsLib from 'pdfjs-dist';
+import { PDFParse } from 'pdf-parse';
 
 // We need to load pdfjs worker. In Node, we can just use a generic or empty worker
 // or set the workerSrc to a dummy since we aren't rendering to canvas directly if we just extract text.
 // However, rendering PDF to image in pure Node.js with pdf.js requires node-canvas.
-// Since the prompt requires "tesseract.js" and "pdf.js", and we are running in Next.js Serverless (Vercel),
+// Since the prompt requires "tesseract.js" and free tools, and we are running in Next.js Serverless (Vercel),
 // installing node-canvas on Vercel is notoriously difficult and heavy.
-// A common workaround is to extract native text using pdf.js, and only use Tesseract on actual image uploads.
-// If it's a scanned PDF, pure pdf.js will return empty text, and we'd ideally need to render it to an image first.
-// We will implement a robust approach: Try pdf.js text extraction first.
+// A common workaround is to extract native text using pdf-parse, and only use Tesseract on actual image uploads.
+// If it's a scanned PDF, pure pdf-parse will return empty text.
+// We will implement a robust approach: Try pdf-parse text extraction first.
 
 export class OCREngine {
   /**
@@ -25,29 +25,14 @@ export class OCREngine {
   }
 
   /**
-   * Processes a PDF buffer using pdf.js for native text.
+   * Processes a PDF buffer using pdf-parse for native text.
    * Note: For scanned PDFs in a serverless environment, rendering pages to images
-   * without node-canvas is complex. We will rely on pdf.js for text extraction.
+   * without node-canvas is complex. We will rely on pdf-parse for text extraction.
    */
   static async processPdf(pdfBuffer: Buffer): Promise<string> {
-    const data = new Uint8Array(pdfBuffer);
-    const loadingTask = pdfjsLib.getDocument({ data });
-    
-    const pdfDocument = await loadingTask.promise;
-    const numPages = pdfDocument.numPages;
-    let fullText = '';
-
-    for (let i = 1; i <= numPages; i++) {
-      const page = await pdfDocument.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        .map((item: any) => item.str)
-        .join(' ');
-      
-      fullText += `--- Page ${i} ---\n${pageText}\n`;
-    }
-
-    return fullText;
+    const parser = new PDFParse({ data: pdfBuffer });
+    const result = await parser.getText();
+    return result.text;
   }
 
   /**

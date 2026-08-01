@@ -75,9 +75,9 @@ export default function DocumentsPage() {
                     }`}>
                       {doc.status.replace('_', ' ')}
                     </span>
-                    <a href={doc.url} target="_blank" rel="noopener noreferrer" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-                      View File <ExternalLink className="ml-2 w-4 h-4" />
-                    </a>
+                    <Link href={`/documents/${doc._id || doc.id}`} className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+                      View Details <ExternalLink className="ml-2 w-4 h-4" />
+                    </Link>
                   </div>
                 </div>
               ))
