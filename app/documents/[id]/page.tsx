@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/utils/axios';
 import { useRouter } from 'next/navigation';
@@ -13,16 +13,18 @@ import { Check, ArrowLeft, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useAppStore } from '@/store/useAppStore';
 
-export default function DocumentDetailsPage({ params }: { params: { id: string } }) {
+export default function DocumentDetailsPage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
+  const id = params.id;
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAppStore();
   const [editedData, setEditedData] = useState<any>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['document', params.id],
+    queryKey: ['document', id],
     queryFn: async () => {
-      const res = await api.get(`/documents/${params.id}`);
+      const res = await api.get(`/documents/${id}`);
       const doc = res.data;
       if (doc && !editedData) {
         setEditedData(doc.extracted_data || {});
@@ -33,12 +35,12 @@ export default function DocumentDetailsPage({ params }: { params: { id: string }
 
   const updateMutation = useMutation({
     mutationFn: async (payload: { extracted_data: any }) => {
-      return api.put(`/documents/${params.id}`, payload);
+      return api.put(`/documents/${id}`, payload);
     },
     onSuccess: () => {
       toast.success('Document updated successfully');
       queryClient.invalidateQueries({ queryKey: ['documents'] });
-      queryClient.invalidateQueries({ queryKey: ['document', params.id] });
+      queryClient.invalidateQueries({ queryKey: ['document', id] });
       router.push('/documents');
     },
     onError: (err: any) => {

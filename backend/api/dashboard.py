@@ -26,22 +26,43 @@ def get_dashboard_stats(
     
     success_rate = (successful / total_documents * 100) if total_documents > 0 else 0
     
+    failure_rate = (failed / total_documents * 100) if total_documents > 0 else 0
+    
     # Document types breakdown
     doc_types = db.query(Document.document_type, func.count(Document.id)).filter(
         Document.uploader_id == current_user.id if current_user.role == "User" else True
     ).group_by(Document.document_type).all()
     
-    types_breakdown = [{"name": dt[0], "value": dt[1]} for dt in doc_types]
+    types_breakdown = [{"name": dt[0] or "Unknown", "value": dt[1]} for dt in doc_types]
+    
+    # Recent Uploads
+    recent_query = db.query(Document).order_by(Document.created_at.desc())
+    if current_user.role == "User":
+        recent_query = recent_query.filter(Document.uploader_id == current_user.id)
+    recent_uploads = recent_query.limit(5).all()
+    
+    # Serialize recent uploads for JSON
+    recent_uploads_json = [
+        {
+            "_id": str(doc.id),
+            "title": doc.filename,
+            "documentType": doc.document_type or "Unknown",
+            "createdAt": doc.created_at.isoformat() if doc.created_at else "",
+            "status": doc.status
+        }
+        for doc in recent_uploads
+    ]
     
     return {
         "stats": {
-            "total_uploaded": total_documents,
-            "successfully_parsed": successful,
-            "failed_parsing": failed,
-            "pending_review": pending_review,
-            "success_rate": round(success_rate, 2),
-            "average_processing_time": "N/A" # Implement later if tracking processing time
+            "totalDocuments": total_documents,
+            "successRate": round(success_rate, 2),
+            "pendingReviewDocs": pending_review,
+            "failureRate": round(failure_rate, 2),
         },
-        "documentTypes": types_breakdown,
-        "monthlyUploads": [] # Mock or implement later
+        "recentUploads": recent_uploads_json,
+        "charts": {
+            "documentTypes": types_breakdown,
+            "monthlyUploads": [] # Mock or implement later
+        }
     }

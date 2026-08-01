@@ -10,7 +10,7 @@ const COLORS = ['#4f46e5', '#06b6d4', '#f59e0b', '#10b981', '#ef4444'];
 
 export default function DashboardPage() {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['dashboard-stats'],
+    queryKey: ['dashboard-stats', 'v2'],
     queryFn: async () => {
       const res = await api.get('/dashboard');
       return res.data;

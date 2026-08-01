@@ -63,7 +63,16 @@ async def upload_document(
     doc.status = DocumentStatusEnum.Pending
     db.commit()
     
-    return {"message": "Document uploaded successfully", "document": doc}
+    return {
+        "message": "Document uploaded successfully", 
+        "document": {
+            "id": str(doc.id),
+            "title": doc.title,
+            "document_type": doc.document_type,
+            "status": doc.status,
+            "url": doc.url
+        }
+    }
 
 @router.get("", response_model=dict)
 def get_documents(
@@ -87,7 +96,8 @@ def get_documents(
     docs_out = []
     for d in documents:
         d_dict = d.__dict__.copy()
-        d_dict["uploader"] = {"name": d.uploader.name, "email": d.uploader.email} if d.uploader else None
+        d_dict.pop("_sa_instance_state", None)
+        d_dict["uploader"] = {"name": d.uploader.name, "email": d.uploader.email} if getattr(d, "uploader", None) else None
         docs_out.append(d_dict)
         
     return {"documents": docs_out}

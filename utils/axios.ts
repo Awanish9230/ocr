@@ -12,6 +12,17 @@ export const api = axios.create({
   },
 });
 
+// Request interceptor to attach token from localStorage (bypasses cross-origin cookie drops on localhost)
+api.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
+
 // Response interceptor for global error handling
 api.interceptors.response.use(
   (response) => {

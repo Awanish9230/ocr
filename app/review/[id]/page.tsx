@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/utils/axios';
 import { useRouter } from 'next/navigation';
@@ -12,7 +12,8 @@ import { toast } from 'sonner';
 import { Check, X, ArrowLeft, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 
-export default function ReviewDetailPage({ params }: { params: { id: string } }) {
+export default function ReviewDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = use(props.params);
   const router = useRouter();
   const queryClient = useQueryClient();
   const [editedData, setEditedData] = useState<any>(null);

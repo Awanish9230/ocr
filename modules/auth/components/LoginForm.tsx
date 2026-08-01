@@ -37,6 +37,7 @@ export function LoginForm() {
     try {
       setIsLoading(true);
       const response = await api.post('/auth/login', data);
+      localStorage.setItem('accessToken', response.data.access_token);
       setUser(response.data.user);
       router.push('/dashboard');
     } catch (error) {
