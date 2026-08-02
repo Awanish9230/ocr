@@ -10,7 +10,7 @@ export default function ReportsPage() {
   const handleExport = async (statusFilter?: string) => {
     try {
       toast.info('Preparing export...');
-      const url = statusFilter ? `/reports/export?status=${statusFilter}` : '/reports/export';
+      const url = statusFilter ? `/reports/export/csv?status=${statusFilter}` : '/reports/export/csv';
       
       const response = await api.get(url, { responseType: 'blob' });
       

@@ -70,6 +70,11 @@ npm run dev
 ```
 *The frontend will be available at [http://localhost:3000](http://localhost:3000).*
 
+### 3. Default Admin Account
+A default admin user is seeded for accessing the Admin Panel and Dashboard analytics. Log in at `http://localhost:3000/login` with:
+- **Email:** `admin@example.com`
+- **Password:** `admin123`
+
 ## 🧠 AI Key Rotation & Fallback
 
 The system implements robust API management. 
