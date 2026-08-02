@@ -45,7 +45,7 @@ def get_dashboard_stats(
     recent_uploads_json = [
         {
             "_id": str(doc.id),
-            "title": doc.filename,
+            "title": doc.title,
             "documentType": doc.document_type or "Unknown",
             "createdAt": doc.created_at.isoformat() if doc.created_at else "",
             "status": doc.status

@@ -34,6 +34,10 @@ export default function DashboardPage() {
     return <div className="text-red-500">Failed to load dashboard data.</div>;
   }
 
+  if (!data) {
+    return null;
+  }
+
   const { stats, recentUploads, charts } = data;
 
   const statCards = [

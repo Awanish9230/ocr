@@ -10,7 +10,7 @@ from backend.models.document import Document, DocumentStatusEnum
 from backend.models.audit_log import AuditLog
 from backend.schemas.document import DocumentOut, DocumentUpdate, DocumentReview
 from backend.services.upload_service import upload_file_to_cloudinary, delete_file_from_cloudinary
-# from backend.services.parser_service import process_document
+from backend.services.parser_service import process_document
 
 router = APIRouter()
 
@@ -56,12 +56,11 @@ async def upload_document(
     db.add(audit)
     db.commit()
     
-    # We should parse async or sync. The original did it sync. Let's keep it simple sync for now 
-    # but mock the parser service call until we implement it fully.
-    # process_document(db, doc.id, file_content)
-    # Temporarily set to pending so frontend doesn't hang
+    # Dispatch the document to the AI parser background task
     doc.status = DocumentStatusEnum.Pending
     db.commit()
+    
+    background_tasks.add_task(process_document, str(doc.id), file_content, file.content_type)
     
     return {
         "message": "Document uploaded successfully", 
@@ -92,13 +91,18 @@ def get_documents(
         
     documents = query.order_by(Document.created_at.desc()).all()
     
-    # Include uploader info manually for now since Pydantic schema doesn't have it nested directly
     docs_out = []
     for d in documents:
-        d_dict = d.__dict__.copy()
-        d_dict.pop("_sa_instance_state", None)
-        d_dict["uploader"] = {"name": d.uploader.name, "email": d.uploader.email} if getattr(d, "uploader", None) else None
-        docs_out.append(d_dict)
+        docs_out.append({
+            "_id": str(d.id),
+            "id": str(d.id),
+            "title": d.title,
+            "documentType": d.document_type or "Unknown",
+            "confidenceScore": d.confidence_score,
+            "createdAt": d.created_at.isoformat() if d.created_at else "",
+            "status": d.status,
+            "uploader": {"name": d.uploader.name, "email": d.uploader.email} if getattr(d, "uploader", None) else None
+        })
         
     return {"documents": docs_out}
 
@@ -170,7 +174,7 @@ def review_document(
     db.add(audit)
     db.commit()
     
-    return {"message": "Document review processed successfully", "document": doc}
+    return {"message": "Document review processed successfully", "document": DocumentOut.model_validate(doc).model_dump()}
 
 @router.put("/{id}")
 def update_document(
@@ -205,4 +209,4 @@ def update_document(
     db.add(audit)
     db.commit()
     
-    return {"message": "Document updated successfully", "document": doc}
+    return {"message": "Document updated successfully", "document": DocumentOut.model_validate(doc).model_dump()}
