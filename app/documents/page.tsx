@@ -1,18 +1,24 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { api } from '@/utils/axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, Search, ExternalLink } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import Link from 'next/link';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function DocumentsPage() {
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [type, setType] = useState('');
   const [status, setStatus] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput), 500);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['documents', search, type, status],
@@ -20,6 +26,7 @@ export default function DocumentsPage() {
       const res = await api.get('/documents', { params: { search, type, status } });
       return res.data;
     },
+    placeholderData: keepPreviousData,
   });
 
   if (isLoading) {
@@ -63,8 +70,8 @@ export default function DocumentsPage() {
                   type="text"
                   placeholder="Search PAN, GST, etc..."
                   className="pl-9 h-9 w-full sm:w-[250px] rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-indigo-600 dark:border-zinc-800 dark:text-white"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                 />
               </div>
               <select
