@@ -1,31 +1,53 @@
 # AutoParse - AI Financial Document Parser & Report Generator
 
-AutoParse is an enterprise-level, production-ready AI Financial Document Parser built entirely using 100% FREE tools, APIs, and hosting. It handles Authentication, OCR, AI Classification, Parsing, Validation, Manual Review, Dashboards, Reports, and Audit Logging.
+## Project Overview
 
-## 🚀 Technology Stack
+AutoParse is an enterprise-level, production-ready AI Financial Document Parser built entirely using 100% FREE tools, APIs, and hosting. It handles Authentication, OCR, AI Classification, Parsing, Validation, Manual Review, Dashboards, Reports, and Audit Logging. The system is designed to automate the extraction of structured data from financial documents, providing a reliable and robust pipeline with AI fallback mechanisms.
+
+## Tech Stack
+
 - **Frontend:** Next.js 15 (App Router), React 19, TypeScript, TailwindCSS v4, Shadcn UI, Zustand, TanStack Query, Recharts.
 - **Backend:** Python 3.13+, FastAPI, SQLAlchemy, Alembic, Uvicorn.
 - **Database:** PostgreSQL (Supabase / Neon) via pg8000.
 - **Storage:** Cloudinary (Free Tier).
 - **AI & OCR:** Gemini API (Primary Parser), Groq API (Fast Fallback), Tesseract.js / pdf.js.
 
-## 📂 Folder Structure
+## Installation Steps
 
-The project uses a decoupled frontend/backend architecture:
+1. **Clone the repository:**
+   ```bash
+   git clone <repository_url>
+   cd ocr
+   ```
 
-- `app/` - Next.js App Router (Frontend pages)
-- `components/` - Global reusable UI components (Shadcn)
-- `backend/` - Python FastAPI Backend
-  - `core/` - JWT security, config, database engines
-  - `api/` - FastAPI Routers (auth, documents, etc.)
-  - `models/` - SQLAlchemy Database Models
-  - `schemas/` - Pydantic Validation Schemas
-  - `services/` - Business Logic (AI Parsing, Uploads)
-  - `alembic/` - Database Migrations
+2. **Backend Setup:**
+   - Create a virtual environment:
+     ```powershell
+     python -m venv .venv
+     .\.venv\Scripts\Activate.ps1
+     ```
+   - Install dependencies (assuming a requirements.txt or pip install):
+     ```powershell
+     pip install -r backend/requirements.txt
+     ```
+   - Run database migrations:
+     ```powershell
+     alembic upgrade head
+     ```
+   - Run a script to seed the admin user (if applicable):
+     ```powershell
+     python create_admin.py
+     ```
 
-## ⚙️ Environment Variables
+3. **Frontend Setup:**
+   - Install Node.js dependencies:
+     ```powershell
+     npm install
+     ```
 
-Create a `.env` file in the root directory:
+## Environment Variables
+
+Create a `.env` file in the root directory and populate it with the following keys:
 
 ```env
 # Database
@@ -51,31 +73,56 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api
 NODE_ENV=development
 ```
 
-## 🏃‍♂️ Running Locally
+## Folder Structure
 
-Since the architecture is decoupled, you must run both servers simultaneously in two separate terminals.
+The project uses a decoupled frontend/backend architecture:
 
-### 1. Start the FastAPI Backend
-Open a new terminal in the project root (`ocr` directory, DO NOT `cd backend`):
-```powershell
-.\.venv\Scripts\Activate.ps1
-uvicorn backend.main:app --reload --port 8000
-```
-*The backend API documentation will be available at [http://localhost:8000/docs](http://localhost:8000/docs).*
+- `app/` - Next.js App Router (Frontend pages)
+- `components/` - Global reusable UI components (Shadcn)
+- `backend/` - Python FastAPI Backend
+  - `core/` - JWT security, config, database engines
+  - `api/` - FastAPI Routers (auth, documents, etc.)
+  - `models/` - SQLAlchemy Database Models
+  - `schemas/` - Pydantic Validation Schemas
+  - `services/` - Business Logic (AI Parsing, Uploads)
+  - `alembic/` - Database Migrations
+- `lib/` - Shared frontend utilities and helpers
+- `store/` - Zustand stores for global state
+- `hooks/` - Custom React hooks
 
-### 2. Start the Next.js Frontend
-Open another terminal in the project root:
-```powershell
-npm run dev
-```
-*The frontend will be available at [http://localhost:3000](http://localhost:3000).*
+## API Documentation
 
-### 3. Default Admin Account
-A default admin user is seeded for accessing the Admin Panel and Dashboard analytics. Log in at `http://localhost:3000/login` with:
-- **Email:** `admin@example.com`
-- **Password:** `admin123`
+The backend exposes an interactive OpenAPI (Swagger) documentation.
 
-## 🧠 AI Key Rotation & Fallback
+1. Ensure the FastAPI backend is running.
+2. Navigate to [http://localhost:8000/docs](http://localhost:8000/docs) in your browser.
+3. You can test all endpoints, view request/response schemas, and authenticate directly from the UI.
 
-The system implements robust API management. 
-If Gemini exhausts its quota or hits a rate limit, the system automatically rotates to the next available API key. If all Gemini keys fail, the pipeline automatically falls back to Groq for extraction.
+## Deployment Guide
+
+The decoupled architecture allows you to deploy the frontend and backend independently.
+
+- **Database:** Set up a free PostgreSQL database on **Supabase** or **Neon**.
+- **Backend:** Deploy the FastAPI backend on **Render**, **Railway**, or **Fly.io** using a standard Python ASGI setup (Uvicorn). Set the environment variables in the dashboard.
+- **Frontend:** Deploy the Next.js frontend on **Vercel** or **Netlify**. Ensure the `NEXT_PUBLIC_API_URL` points to your deployed backend URL.
+- **Storage:** Create a free account on **Cloudinary** and configure the storage keys.
+
+## Assumptions
+
+- Uploaded financial documents are relatively legible and not completely distorted.
+- The free tiers of the utilized APIs (Gemini, Groq, Cloudinary) provide sufficient rate limits and storage for the expected scale.
+- Database access is handled via `pg8000` driver to ensure compatibility across various PostgreSQL hosting providers without needing native C extensions in serverless environments.
+
+## Known Limitations
+
+- **Rate Limiting:** Free tier AI APIs may hit rate limits during heavy concurrent processing, triggering the fallback mechanism or delays.
+- **File Size Limits:** Cloudinary's free tier has upload size restrictions for individual files.
+- **OCR Accuracy:** Heavily handwritten or degraded documents might have reduced extraction accuracy compared to digitally generated PDFs.
+
+## Future Improvements
+
+- **Export Functionality:** Add the ability to export parsed reports to CSV, Excel, and PDF formats.
+- **Role-Based Access Control (RBAC):** Implement granular permissions for multiple user roles (Viewer, Editor, Admin).
+- **Webhooks:** Support webhooks to notify external systems when a document finishes processing.
+- **Enhanced Local OCR:** Integrate more advanced open-source OCR models for improved offline extraction.
+- **Batch Processing:** Provide a dedicated UI for uploading and processing hundreds of documents simultaneously.
