@@ -63,6 +63,19 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import json
 
+def format_extracted_value(val):
+    if isinstance(val, list):
+        items = []
+        for item in val:
+            if isinstance(item, dict):
+                items.append(", ".join(f"{k}: {v}" for k, v in item.items()))
+            else:
+                items.append(str(item))
+        return " | ".join(items)
+    elif isinstance(val, dict):
+        return ", ".join(f"{k}: {v}" for k, v in val.items())
+    return str(val)
+
 @router.get("/export/excel/{id}")
 def export_report_excel(
     id: str,
@@ -83,12 +96,12 @@ def export_report_excel(
         "Review Status": [doc.status],
         "Confidence Score": [doc.confidence_score],
     }
-    
+
     # Flatten extracted data
     if doc.extracted_data:
         for k, v in doc.extracted_data.items():
             if isinstance(v, (list, dict)):
-                data[f"Extracted: {k}"] = [json.dumps(v)]
+                data[f"Extracted: {k}"] = [format_extracted_value(v)]
             else:
                 data[f"Extracted: {k}"] = [v]
                 
@@ -146,7 +159,8 @@ def export_report_pdf(
                 p.showPage()
                 y = 750
             if isinstance(v, (list, dict)):
-                text = f"{k}: {json.dumps(v)[:100]}..." # Truncate long json
+                formatted = format_extracted_value(v)
+                text = f"{k}: {formatted[:100]}..." if len(formatted) > 100 else f"{k}: {formatted}"
             else:
                 text = f"{k}: {v}"
             p.drawString(60, y, text)
