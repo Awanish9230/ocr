@@ -25,11 +25,11 @@ RUN mkdir -p /app/backend
 # Copy the current directory contents into the /app/backend directory
 COPY . /app/backend/
 
-# Expose port
+# Expose port (Render sets this dynamically, but 8000 is default)
 EXPOSE 8000
 
 # Set Python Path so it can resolve 'backend.main'
 ENV PYTHONPATH=/app
 
 # Run Alembic migrations and then start Uvicorn
-CMD cd backend && alembic upgrade head && cd .. && uvicorn backend.main:app --host 0.0.0.0 --port 8000
+CMD cd backend && alembic upgrade head && cd .. && uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}
