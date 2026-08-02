@@ -44,22 +44,53 @@ def process_document(doc_id: str, file_content: bytes, mime_type: str):
             
         client = genai.Client(api_key=keys[0])
         
-        prompt = """Extract all available financial data from this document into JSON format. 
-Be extremely accurate. You MUST return ONLY a valid JSON object with the following structure:
+        prompt = """Extract all available financial data from this document into JSON format.
+Identify the type of document first (e.g., 'Invoice', 'Receipt', 'Bank Statement', 'Salary Slip').
+
+If it is an Invoice or Receipt, use this structure:
 {
-  "document_type": "Invoice or Receipt or Bank Statement",
-  "vendor_name": "Name of the company",
-  "customer_name": "Name of customer",
+  "document_type": "Invoice",
+  "vendor_name": "...",
+  "customer_name": "...",
   "date": "YYYY-MM-DD",
-  "invoice_number": "number",
+  "invoice_number": "...",
   "subtotal": 100.0,
   "tax_amount": 10.0,
   "total_amount": 110.0,
   "line_items": [
-    {"description": "item", "quantity": 1, "unit_price": 100.0, "amount": 100.0}
+    {"description": "...", "quantity": 1, "unit_price": 100.0, "amount": 100.0}
   ]
 }
-If a field is missing, set its value to null.
+
+If it is a Bank Statement, use this structure:
+{
+  "document_type": "Bank Statement",
+  "bank_name": "...",
+  "account_name": "...",
+  "statement_period": "...",
+  "opening_balance": 100.0,
+  "closing_balance": 200.0,
+  "transactions": [
+    {"date": "YYYY-MM-DD", "description": "...", "debit": 50.0, "credit": null, "balance": 150.0}
+  ]
+}
+
+If it is a Salary Slip, use this structure:
+{
+  "document_type": "Salary Slip",
+  "employer_name": "...",
+  "employee_name": "...",
+  "pay_period": "...",
+  "net_pay": 5000.0,
+  "earnings": [
+    {"description": "Basic Pay", "amount": 3000.0}
+  ],
+  "deductions": [
+    {"description": "Tax", "amount": 500.0}
+  ]
+}
+
+Return ONLY a valid JSON object. If a field is missing, set its value to null.
 """
         
         response = client.models.generate_content(
@@ -81,9 +112,9 @@ If a field is missing, set its value to null.
         
         # Generate a synthetic confidence score
         filled_fields = sum(1 for v in parsed_data.values() if v is not None and v != [])
-        total_fields = 8 # Excluding list
-        score = min(99.0, round((filled_fields / total_fields) * 100, 1))
-        doc.confidence_score = max(score, 65.0) # Assume at least 65% if it successfully parsed JSON
+        total_fields = len(parsed_data.keys())
+        score = min(99.0, round((filled_fields / total_fields) * 100, 1)) if total_fields > 0 else 65.0
+        doc.confidence_score = max(score, 65.0)
         
         doc.status = DocumentStatusEnum.Validation_Pending
         db.commit()

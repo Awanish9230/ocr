@@ -195,6 +195,9 @@ def update_document(
         raise HTTPException(status_code=400, detail="Document cannot be edited in current state")
         
     doc.extracted_data = doc_in.extracted_data
+    if doc.status == DocumentStatusEnum.Validation_Pending:
+        doc.status = DocumentStatusEnum.Completed
+        
     db.commit()
     db.refresh(doc)
     

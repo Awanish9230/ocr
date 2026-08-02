@@ -155,15 +155,22 @@ export default function DocumentDetailsPage(props: { params: Promise<{ id: strin
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Original File</CardTitle>
-            <CardDescription>Click below to open the full image/PDF</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center border-t border-gray-100 p-6 bg-gray-50 dark:bg-zinc-900/50 min-h-[400px]">
-            <a href={data.url} target="_blank" rel="noopener noreferrer" className={buttonVariants({ variant: 'outline' })}>
-              View Original File <ExternalLink className="w-4 h-4 ml-2" />
+        <Card className="flex flex-col overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <div className="space-y-1">
+              <CardTitle>Original File</CardTitle>
+              <CardDescription>Preview of the uploaded document</CardDescription>
+            </div>
+            <a href={data.url} target="_blank" rel="noopener noreferrer" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+              Open <ExternalLink className="w-4 h-4 ml-2" />
             </a>
+          </CardHeader>
+          <CardContent className="flex-1 p-0 border-t border-gray-100 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900/50 min-h-[600px] md:min-h-[800px] relative">
+            <iframe 
+              src={data.url} 
+              className="absolute inset-0 w-full h-full border-0"
+              title="Original Document"
+            />
           </CardContent>
         </Card>
 
