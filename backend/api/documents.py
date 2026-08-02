@@ -73,10 +73,14 @@ async def upload_document(
         }
     }
 
+from sqlalchemy import cast, String
 @router.get("", response_model=dict)
 def get_documents(
     status: Optional[str] = None,
     type: Optional[str] = None,
+    search: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user)
 ) -> Any:
@@ -88,6 +92,15 @@ def get_documents(
         query = query.filter(Document.status == status)
     if type:
         query = query.filter(Document.document_type == type)
+    if search:
+        query = query.filter(
+            (Document.title.ilike(f"%{search}%")) |
+            (cast(Document.extracted_data, String).ilike(f"%{search}%"))
+        )
+    if start_date:
+        query = query.filter(Document.created_at >= start_date)
+    if end_date:
+        query = query.filter(Document.created_at <= f"{end_date}T23:59:59")
         
     documents = query.order_by(Document.created_at.desc()).all()
     

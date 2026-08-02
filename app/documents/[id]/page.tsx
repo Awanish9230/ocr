@@ -147,11 +147,55 @@ export default function DocumentDetailsPage(props: { params: Promise<{ id: strin
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/documents" className={buttonVariants({ variant: 'ghost' })}>
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Documents
-        </Link>
-        <h1 className="text-2xl font-bold tracking-tight">{data.title} Details</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/documents" className={buttonVariants({ variant: 'ghost' })}>
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Documents
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight">{data.title} Details</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline"
+            onClick={async () => {
+              try {
+                const res = await api.get(`/reports/export/pdf/${id}`, { responseType: 'blob' });
+                const url = window.URL.createObjectURL(new Blob([res.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `report_${id}.pdf`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+              } catch (e) {
+                console.error('Failed to export PDF', e);
+                alert('Failed to export PDF. You may be unauthorized.');
+              }
+            }}
+          >
+            Export PDF
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={async () => {
+              try {
+                const res = await api.get(`/reports/export/excel/${id}`, { responseType: 'blob' });
+                const url = window.URL.createObjectURL(new Blob([res.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `report_${id}.xlsx`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+              } catch (e) {
+                console.error('Failed to export Excel', e);
+                alert('Failed to export Excel. You may be unauthorized.');
+              }
+            }}
+          >
+            Export Excel
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

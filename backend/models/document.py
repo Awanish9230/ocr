@@ -28,6 +28,7 @@ class Document(Base):
     # Store dynamic parsed data and errors
     extracted_data = Column(JSON, nullable=True)
     validation_errors = Column(JSON, nullable=True)
+    processing_time = Column(Float, nullable=True)
     
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))

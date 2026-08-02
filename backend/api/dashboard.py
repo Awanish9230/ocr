@@ -25,8 +25,12 @@ def get_dashboard_stats(
     pending_review = query.filter(Document.status == DocumentStatusEnum.Validation_Pending).count()
     
     success_rate = (successful / total_documents * 100) if total_documents > 0 else 0
-    
     failure_rate = (failed / total_documents * 100) if total_documents > 0 else 0
+    
+    avg_processing_time = db.query(func.avg(Document.processing_time)).filter(Document.processing_time.isnot(None))
+    if current_user.role == "User":
+        avg_processing_time = avg_processing_time.filter(Document.uploader_id == current_user.id)
+    avg_processing_time = avg_processing_time.scalar() or 0
     
     # Document types breakdown
     doc_types = db.query(Document.document_type, func.count(Document.id)).filter(
@@ -34,6 +38,22 @@ def get_dashboard_stats(
     ).group_by(Document.document_type).all()
     
     types_breakdown = [{"name": dt[0] or "Unknown", "value": dt[1]} for dt in doc_types]
+    
+    # Daily Uploads (Last 7 days)
+    from datetime import datetime, timedelta, timezone
+    today = datetime.now(timezone.utc)
+    daily_uploads = []
+    for i in range(6, -1, -1):
+        day = today - timedelta(days=i)
+        day_str = day.strftime("%Y-%m-%d")
+        count = query.filter(func.date(Document.created_at) == day.date()).count()
+        daily_uploads.append({"date": day_str, "count": count})
+        
+    # Monthly Uploads (This year)
+    monthly_uploads = []
+    for i in range(1, 13):
+        count = query.filter(func.extract('month', Document.created_at) == i, func.extract('year', Document.created_at) == today.year).count()
+        monthly_uploads.append({"month": i, "count": count})
     
     # Recent Uploads
     recent_query = db.query(Document).order_by(Document.created_at.desc())
@@ -59,10 +79,12 @@ def get_dashboard_stats(
             "successRate": round(success_rate, 2),
             "pendingReviewDocs": pending_review,
             "failureRate": round(failure_rate, 2),
+            "averageProcessingTime": round(avg_processing_time, 2)
         },
         "recentUploads": recent_uploads_json,
         "charts": {
             "documentTypes": types_breakdown,
-            "monthlyUploads": [] # Mock or implement later
+            "dailyUploads": daily_uploads,
+            "monthlyUploads": monthly_uploads
         }
     }

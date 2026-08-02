@@ -43,6 +43,7 @@ export default function DashboardPage() {
   const statCards = [
     { title: 'Total Documents', value: stats.totalDocuments, icon: FileText, color: 'text-indigo-600' },
     { title: 'Success Rate', value: `${stats.successRate}%`, icon: CheckCircle, color: 'text-emerald-500' },
+    { title: 'Avg Process Time', value: `${stats.averageProcessingTime}s`, icon: FileText, color: 'text-blue-500' },
     { title: 'Pending Review', value: stats.pendingReviewDocs, icon: AlertTriangle, color: 'text-amber-500' },
     { title: 'Failure Rate', value: `${stats.failureRate}%`, icon: XCircle, color: 'text-rose-500' },
   ];
@@ -51,7 +52,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Dashboard</h1>
       
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
         {statCards.map((stat, idx) => (
           <Card key={idx} className="bg-white dark:bg-zinc-900 border-gray-200 dark:border-zinc-800">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
